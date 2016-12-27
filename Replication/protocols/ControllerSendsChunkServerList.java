@@ -1,0 +1,74 @@
+package protocols;
+
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import node.Controller;
+
+public class ControllerSendsChunkServerList {
+
+	ArrayList<Integer> chunkList;
+	int chunkNumber;
+	ArrayList<Integer> needed;
+	Controller controllerNode;
+
+	public ControllerSendsChunkServerList(Controller controller,
+			int chunkNumberOfF, ArrayList<Integer> subList,
+			ArrayList<Integer> needToSendIPPort) {
+		// System.out.println("Start Con");
+		// TODO Auto-generated constructor stub
+		this.chunkList = subList;
+		this.chunkNumber = chunkNumberOfF;
+		needed = needToSendIPPort;
+		this.controllerNode = controller;
+		// System.out.println("End Con");
+
+	}
+
+	public byte[] getByte() throws Exception {
+		// TODO Auto-generated method stub
+
+		byte[] marshalledBytes = null;
+		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream();
+		DataOutputStream dout = new DataOutputStream(new BufferedOutputStream(
+				baOutputStream));
+		dout.write(Protocol.CONTROLLER_SENDS_CHUNKSERVERLIST);
+
+		dout.writeInt(chunkNumber);
+
+		dout.writeInt(chunkList.size());
+		for (int i : chunkList)
+			dout.writeInt(i);
+		dout.writeInt(needed.size());
+		// System.out.println("needed Size" + needed.size());
+		// System.out.println(controllerNode.hostAddressAndPortOfChunkServer);
+		for (int i : needed) {
+			dout.writeInt(i);
+			String key = ((controllerNode.hostAddressAndPortOfChunkServer
+					.get(i)).keySet().toString());
+			key = key.substring(1, key.length() - 1);
+			int port = (controllerNode.hostAddressAndPortOfChunkServer.get(i)
+					.get((Object) key));
+			// System.out.println(key + port);
+			byte[] byteLocalIP = key.getBytes();
+			int addressLength = byteLocalIP.length;
+			dout.writeInt(addressLength);
+			dout.write(byteLocalIP);
+			dout.writeInt(port);
+
+			// System.out.println(controllerNode.hostAddressAndPortOfChunkServer.get(i).get((controllerNode.hostAddressAndPortOfChunkServer.get(i)).keySet().toString()));
+		}
+		// dout.writeInt(chunk);
+		dout.flush();
+		marshalledBytes = baOutputStream.toByteArray();
+		baOutputStream.close();
+		dout.close();
+		// System.out.println("Bytes Generated");
+		return marshalledBytes;
+
+	}
+}
